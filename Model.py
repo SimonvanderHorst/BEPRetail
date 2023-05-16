@@ -1,13 +1,41 @@
+import pickle
+
 import numpy as np
 import random
 import panel as pn
 import holoviews as hv
-from mesa import Model
+from matplotlib import pyplot as plt
+from mesa import Model, DataCollector
 from holoviews.plotting import list_cmaps
+from mesa.batchrunner import BatchRunner
 from mesa.time import RandomActivation
 from mesa.space import SingleGrid
-
 from Agent import Food, Retailer, Consumer
+import seaborn as sns
+
+
+# functions used for collecting data
+
+def count_type(model, condition):
+    count = 0
+    for a in model.schedule.agents:
+        if a.breed == condition:
+            count += 1
+    return count
+
+
+# gets the amount of model steps
+def get_step_number(model):
+    return model.schedule.steps
+
+
+def get_food_waste(model):
+    amount = 0
+    for a in model.schedule.agents:
+        if a.breed == "Food":
+            if a.expired == 1:
+                amount += a.expired
+    return amount
 
 
 class RetailerWaste(Model):
@@ -26,6 +54,14 @@ class RetailerWaste(Model):
         self.schedule = RandomActivation(self)
         self.grid = SingleGrid(width, height, torus=False)  # each block can only contain one agent,
         # the edges of the model act like walls
+
+        self.datacollector = DataCollector(model_reporters={"Food": lambda m: count_type(m, "Food"),
+                                                            "Consumer": lambda m: count_type(m, "Consumer"),
+                                                            "Retailer": lambda m: count_type(m, "Retailer"),
+                                                            "step": get_step_number,
+                                                            "food_waste": get_food_waste
+                                                            },
+                                           agent_reporters={"breed": lambda a: a.breed})
 
         for y in range(self.height):
             for x in range(self.width):
@@ -52,19 +88,22 @@ class RetailerWaste(Model):
                     self.grid.position_agent(new_consumer, x, y)
                     self.schedule.add(new_consumer)
 
+        self.running = True
+
     def step(self):
         """
         Time in model moves in steps
         """
         self.schedule.step()
 
-        # self.datacollector.collect(self)
+        self.datacollector.collect(self)
         # print(self.grid.find_empty())
 
 
 # this is where you update the model parameters
 retailmodel = RetailerWaste(width=40, height=40, food_density=0.7, steps_until_expiration=random.randint(20, 40),
-                            retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5, food_price=random.randint(8,10))
+                            retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
+                            food_price=random.randint(8, 10))
 
 
 # color setup for holoviews
@@ -105,7 +144,8 @@ hmap = hv.HoloMap()
 def run_model():  # defining the run_model class
     for i in range(50):  # steps the model takes
         retailmodel.step()
-        data = np.array([[value(retailmodel.grid[(x, y)]) for x in range(retailmodel.grid.height)] for y in range(retailmodel.grid.height)])
+        data = np.array([[value(retailmodel.grid[(x, y)]) for x in range(retailmodel.grid.height)] for y in
+                         range(retailmodel.grid.height)])
         data = np.flip(data, axis=0)
         bounds = (0, 0, 2, 2)
 
@@ -115,8 +155,41 @@ def run_model():  # defining the run_model class
     # hmap
     # show visualiser, bugs out when it's run before the batchrunner
     pn.panel(hmap).show()
-    model_data = retailmodel.datacollector.get_model_vars_dataframe()
-    agent_data = retailmodel.datacollector.get_agent_vars_dataframe()
+
+    # model_data = retailmodel.datacollector.get_model_vars_dataframe()
+    # agent_data = retailmodel.datacollector.get_agent_vars_dataframe()
 
 
-run_model()
+fixed_params = dict(height=100, width=100)
+# cleanup_pos=np.arange(0, 100, 10)[1:]
+
+# cleanup_effectiveness=np.arange(0, 1, 0.05)
+
+variable_params = dict(food_density=np.arange(0,1,0.05)[1:])  # loop over the width of the model in steps, 1 step takes around 130s
+
+model_reporter = {"Food": lambda m: count_type(m, "Food"),
+                  "Consumer": lambda m: count_type(m, "Consumer"),
+                  "Retailer": lambda m: count_type(m, "Retailer"),
+                  "step": get_step_number,
+                  "food_waste": get_food_waste}
+
+agent_reporter = {}
+
+# running the batch
+def run_batch():
+    param_run = BatchRunner(RetailerWaste, variable_parameters=variable_params, iterations=2,
+                            # the number of iterations is 1
+                            fixed_parameters=fixed_params, model_reporters=model_reporter,
+                            agent_reporters= agent_reporter, max_steps=100)
+    param_run.run_all()
+
+    model_data_batchrunner = param_run.get_model_vars_dataframe()
+    # saves the data to a .pkl
+    with open('model_data.pkl', 'wb') as f:
+        pickle.dump(model_data_batchrunner, f)
+
+
+# run the batch before the model, otherwise it bugs out.
+if __name__ == "__main__":
+    run_batch()
+    run_model()

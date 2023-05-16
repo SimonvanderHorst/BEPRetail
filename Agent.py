@@ -49,17 +49,22 @@ class Consumer(Agent):
                     if self.random.randint(0, neighbor.steps_until_expiration) <= neighbor.minimum_day_until_expiry:
                         neighbor.purchased = 1
 
-        # consumer agent movement todo: fix swap_pos attribute
-
+        # consumer agent movement. First, a list of movable locations is made, then a random option out of the list
+        # is chosen. Because the swapping of an agent with an agent works differently than an agent moving to an
+        # empty cell we will first check if the chosen location is a consumer or an empty cell to then apply the
+        # correct function.
+        movement_options = []
         for neighbor in self.neighbors:
-            if neighbor.breed == "Consumer" and random.random() < 0.3: #todo hardcoded swap number
-                self.model.grid.swap_pos(self, neighbor)
-                print("je")
+            if neighbor.breed == "Consumer":
+                movement_options.append(neighbor)
+        for neighbor in self.empty_neighbors:
+            movement_options.append(neighbor)
+        chosen_movement = random.choice(movement_options)
+        if isinstance(chosen_movement, tuple):
+            self.model.grid.move_agent(self, chosen_movement)  # move to that position
+        elif chosen_movement.breed == "Consumer":
+            self.model.grid.swap_pos(self, chosen_movement)
 
-
-        if self.empty_neighbors:
-            new_pos = self.random.choice(self.empty_neighbors)  # find a random empty neighbor position
-            self.model.grid.move_agent(self, new_pos)  # move to that position
 
 
     def update_neighbors(self):
