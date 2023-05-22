@@ -6,7 +6,7 @@ from mesa.space import SingleGrid
 
 
 class Food(Agent):
-    def __init__(self, pos, model, probability_range, steps_until_expiration, food_price):
+    def __init__(self, pos, model, probability_range, steps_until_expiration, food_price, steps_until_restock):
         super().__init__(pos, model)
         self.breed = "Food"
         self.pos = pos
@@ -16,13 +16,26 @@ class Food(Agent):
         self.food_type = 'meat'
         self.food_price = food_price
         self.purchased = 0
+        self.steps_until_restock = steps_until_restock
         self.minimum_day_until_expiry = 5  # check what this does again
         self.expired = 0
 
     def step(self):
-        self.steps_until_expiration -= 1
+
+        if self.expired == 1:
+            self.steps_until_restock -= 1
+            if self.steps_until_restock == 0:
+                # gives the products their initial (stochastic) values # todo make these model parameters
+                self.expired = 0
+                self.steps_until_expiration = random.randint(20, 40)
+                self.steps_until_restock = 2
+                self.purchased = 0
+
+        #expiration logic
         if self.steps_until_expiration == -1:
             self.expired = 1
+
+        self.steps_until_expiration -= 1
 
 
 class Consumer(Agent):
@@ -44,9 +57,9 @@ class Consumer(Agent):
                 if neighbor.food_type == 'meat':
                     neighbor.purchased = 1
                 elif neighbor.food_type == "vegetable":
-                    # if a random integer between 0 and the products base expiry date is lower than its current
+                    # if a random integer between 0 and the products base expiry date is lower than its current #todo this is dumb and false
                     # expiry date the consumer will purchase the item
-                    if self.random.randint(0, neighbor.steps_until_expiration) <= neighbor.minimum_day_until_expiry:
+                    if self.random.randint(0, neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry:
                         neighbor.purchased = 1
 
         # consumer agent movement. First, a list of movable locations is made, then a random option out of the list
@@ -64,8 +77,6 @@ class Consumer(Agent):
             self.model.grid.move_agent(self, chosen_movement)  # move to that position
         elif chosen_movement.breed == "Consumer":
             self.model.grid.swap_pos(self, chosen_movement)
-
-
 
     def update_neighbors(self):
         """

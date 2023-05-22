@@ -40,7 +40,8 @@ def get_food_waste(model):
 
 class RetailerWaste(Model):
     def __init__(self, width=30, height=30, food_density=0.8, steps_until_expiration=random.randint(20, 40),
-                 retailer_density=0.2, consumer_density=0.3, food_type_probability=0.5, food_price=10):
+                 retailer_density=0.2, consumer_density=0.3, food_type_probability=0.5, food_price=10,
+                 steps_until_restock=5):
         # adjust these variables at retailmodel level, this is the base scenario
 
         self.width = width  # width of the model
@@ -51,6 +52,7 @@ class RetailerWaste(Model):
         self.consumer_density = consumer_density  # %chance of a block being a consumer agent
         self.food_type_prob = food_type_probability  # %chance of a food agent being vegetable
         self.food_price = food_price
+        self.steps_until_restock = steps_until_restock
         self.schedule = RandomActivation(self)
         self.grid = SingleGrid(width, height, torus=False)  # each block can only contain one agent,
         # the edges of the model act like walls
@@ -69,7 +71,8 @@ class RetailerWaste(Model):
                 if (y % 2) == 0 and self.random.random() < self.food_density:
                     new_food = Food((x, y), self, food_density,
                                     steps_until_expiration=random.randint(10, steps_until_expiration),
-                                    food_price=food_price)  # TODO: define this + hardcoded number + Paul vragen?
+                                    food_price=food_price,
+                                    steps_until_restock=steps_until_restock)  # TODO: define this + hardcoded number + Paul vragen?
                     self.grid.position_agent(new_food, x, y)  # position the agent in the grid
                     self.schedule.add(new_food)  # add agent to the scheduler
                     if self.random.random() <= food_type_probability:  # odds of the product being either meat or vegetable
@@ -103,7 +106,7 @@ class RetailerWaste(Model):
 # this is where you update the model parameters
 retailmodel = RetailerWaste(width=40, height=40, food_density=0.7, steps_until_expiration=random.randint(20, 40),
                             retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
-                            food_price=random.randint(8, 10))
+                            food_price=random.randint(8, 10), steps_until_restock=3)
 
 
 # color setup for holoviews
@@ -161,11 +164,9 @@ def run_model():  # defining the run_model class
 
 
 fixed_params = dict(height=100, width=100)
-# cleanup_pos=np.arange(0, 100, 10)[1:]
 
-# cleanup_effectiveness=np.arange(0, 1, 0.05)
-
-variable_params = dict(food_density=np.arange(0,1,0.05)[1:])  # loop over the width of the model in steps, 1 step takes around 130s
+variable_params = dict(
+    food_density=np.arange(0, 1, 0.1)[1:], consumer_density=np.arange(0,1, 0.1 )[1:])  # loop over the width of the model in steps, 1 step takes around 4s
 
 model_reporter = {"Food": lambda m: count_type(m, "Food"),
                   "Consumer": lambda m: count_type(m, "Consumer"),
@@ -175,12 +176,13 @@ model_reporter = {"Food": lambda m: count_type(m, "Food"),
 
 agent_reporter = {}
 
+
 # running the batch
 def run_batch():
-    param_run = BatchRunner(RetailerWaste, variable_parameters=variable_params, iterations=2,
+    param_run = BatchRunner(RetailerWaste, variable_parameters=variable_params, iterations=1,
                             # the number of iterations is 1
                             fixed_parameters=fixed_params, model_reporters=model_reporter,
-                            agent_reporters= agent_reporter, max_steps=100)
+                            agent_reporters=agent_reporter, max_steps=100)
     param_run.run_all()
 
     model_data_batchrunner = param_run.get_model_vars_dataframe()
