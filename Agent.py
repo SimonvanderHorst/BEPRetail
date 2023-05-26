@@ -1,9 +1,5 @@
-import numpy as np
 import random
 from mesa import Agent
-from mesa import Model
-from mesa.space import SingleGrid
-
 
 class Food(Agent):
     def __init__(self, pos, model, probability_range, steps_until_expiration, food_price, steps_until_restock):
@@ -28,7 +24,7 @@ class Food(Agent):
                 # gives the products their initial (stochastic) values # todo make these model parameters
                 self.expired = 0
                 self.steps_until_expiration = random.randint(20, 40)
-                self.steps_until_restock = 2
+                self.steps_until_restock = 1
                 self.purchased = 0
 
         #expiration logic
@@ -39,14 +35,16 @@ class Food(Agent):
 
 
 class Consumer(Agent):
-    def __init__(self, pos, model, family, wealth):
+    def __init__(self, pos, model, family_size, wealth):
         super().__init__(pos, model)
         self.breed = "Consumer"
         self.pos = pos
         self.model = model
-        self.family_size = family
+        self.family_size = family_size
         self.wealth = wealth
-        self.minimum_days_until_expiry = 10 / self.family_size  # lineair?
+        self.minimum_days_until_expiry = 10 / self.family_size  # lineair? #todo wtf
+
+
 
     def step(self):
 
@@ -55,7 +53,9 @@ class Consumer(Agent):
         for neighbor in self.neighbors:
             if neighbor.breed == "Food" and neighbor.expired == 0:
                 if neighbor.food_type == 'meat':
-                    neighbor.purchased = 1
+
+                    if self.random.randint(0, neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry:
+                        neighbor.purchased = 1
                 elif neighbor.food_type == "vegetable":
                     # if a random integer between 0 and the products base expiry date is lower than its current #todo this is dumb and false
                     # expiry date the consumer will purchase the item

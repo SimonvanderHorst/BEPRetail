@@ -41,7 +41,7 @@ def get_food_waste(model):
 class RetailerWaste(Model):
     def __init__(self, width=30, height=30, food_density=0.8, steps_until_expiration=random.randint(20, 40),
                  retailer_density=0.2, consumer_density=0.3, food_type_probability=0.5, food_price=10,
-                 steps_until_restock=5):
+                 steps_until_restock=5, family_size=5, wealth=5, investment_level=1):
         # adjust these variables at retailmodel level, this is the base scenario
 
         self.width = width  # width of the model
@@ -53,6 +53,12 @@ class RetailerWaste(Model):
         self.food_type_prob = food_type_probability  # %chance of a food agent being vegetable
         self.food_price = food_price
         self.steps_until_restock = steps_until_restock
+
+        self.family_size = family_size
+        self.wealth = wealth
+
+        self.investment_level = investment_level
+
         self.schedule = RandomActivation(self)
         self.grid = SingleGrid(width, height, torus=False)  # each block can only contain one agent,
         # the edges of the model act like walls
@@ -87,7 +93,7 @@ class RetailerWaste(Model):
                     self.grid.position_agent(new_retailer, x, y)
                     self.schedule.add(new_retailer)
                 elif self.random.random() < self.consumer_density:  # Set chance consumers are spawned on the aisle
-                    new_consumer = Consumer((x, y), self, consumer_density, wealth=20)
+                    new_consumer = Consumer((x, y), self, family_size, wealth)
                     self.grid.position_agent(new_consumer, x, y)
                     self.schedule.add(new_consumer)
 
@@ -106,7 +112,8 @@ class RetailerWaste(Model):
 # this is where you update the model parameters
 retailmodel = RetailerWaste(width=40, height=40, food_density=0.7, steps_until_expiration=random.randint(20, 40),
                             retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
-                            food_price=random.randint(8, 10), steps_until_restock=3)
+                            food_price=random.randint(6, 10), steps_until_restock=1, family_size=5, wealth=20,
+                            investment_level=5)
 
 
 # color setup for holoviews
@@ -166,7 +173,8 @@ def run_model():  # defining the run_model class
 fixed_params = dict(height=100, width=100)
 
 variable_params = dict(
-    food_density=np.arange(0, 1, 0.1)[1:], consumer_density=np.arange(0,1, 0.1 )[1:])  # loop over the width of the model in steps, 1 step takes around 4s
+    food_density=np.arange(0, 1, 0.1)[1:],
+    consumer_density=np.arange(0, 1, 0.1)[1:])  # loop over the width of the model in steps, 1 step takes around 4s
 
 model_reporter = {"Food": lambda m: count_type(m, "Food"),
                   "Consumer": lambda m: count_type(m, "Consumer"),
@@ -193,5 +201,5 @@ def run_batch():
 
 # run the batch before the model, otherwise it bugs out.
 if __name__ == "__main__":
-    run_batch()
+    # run_batch()
     run_model()
