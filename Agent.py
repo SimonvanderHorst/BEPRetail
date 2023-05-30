@@ -54,12 +54,12 @@ class Consumer(Agent):
             if neighbor.breed == "Food" and neighbor.expired == 0:
                 if neighbor.food_type == 'meat':
 
-                    if self.random.randint(0, neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry:
+                    if all(self.random.randint(0, neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry and self.wealth >= neighbor.food_price):
                         neighbor.purchased = 1
                 elif neighbor.food_type == "vegetable":
                     # if a random integer between 0 and the products base expiry date is lower than its current #todo this is dumb and false
                     # expiry date the consumer will purchase the item
-                    if self.random.randint(0, neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry:
+                    if all(self.random.randint(0, neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry and self.wealth >= neighbor.food_price):
                         neighbor.purchased = 1
 
         # consumer agent movement. First, a list of movable locations is made, then a random option out of the list

@@ -1,6 +1,8 @@
 import pickle
 
 import numpy as np
+from numpy import random
+
 import random
 import panel as pn
 import holoviews as hv
@@ -39,9 +41,11 @@ def get_food_waste(model):
 
 
 class RetailerWaste(Model):
-    def __init__(self, width=30, height=30, food_density=0.8, steps_until_expiration=random.randint(20, 40),
-                 retailer_density=0.2, consumer_density=0.3, food_type_probability=0.5, food_price=10,
-                 steps_until_restock=5, family_size=5, wealth=5, investment_level=1):
+    def __init__(self, width=40, height=40, food_density=0.7, steps_until_expiration=random.randint(20, 40),
+                 retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
+                 food_price=np.random.binomial(10, 0.3, 100), steps_until_restock=1,
+                 family_size=5, wealth=np.random.binomial(10, 0.6, 100),
+                 investment_level=5):
         # adjust these variables at retailmodel level, this is the base scenario
 
         self.width = width  # width of the model
@@ -81,10 +85,15 @@ class RetailerWaste(Model):
                                     steps_until_restock=steps_until_restock)  # TODO: define this + hardcoded number + Paul vragen?
                     self.grid.position_agent(new_food, x, y)  # position the agent in the grid
                     self.schedule.add(new_food)  # add agent to the scheduler
+                    self.food_price = random.choice(food_price)
                     if self.random.random() <= food_type_probability:  # odds of the product being either meat or vegetable
                         new_food.food_type = "meat"
                     else:
                         new_food.food_type = "vegetable"
+                    # the expiry date of a product is extended based on the investment level
+                    # the price of a product is increased based on the investment level
+                    self.steps_until_expiration = self.steps_until_expiration * (1 + (0.1 * self.investment_level))
+                    self.food_price = self.food_price * (1 + (0.1 * self.investment_level))
 
 
                 elif (
@@ -94,6 +103,7 @@ class RetailerWaste(Model):
                     self.schedule.add(new_retailer)
                 elif self.random.random() < self.consumer_density:  # Set chance consumers are spawned on the aisle
                     new_consumer = Consumer((x, y), self, family_size, wealth)
+                    self.wealth = random.choice(wealth)
                     self.grid.position_agent(new_consumer, x, y)
                     self.schedule.add(new_consumer)
 
@@ -112,7 +122,8 @@ class RetailerWaste(Model):
 # this is where you update the model parameters
 retailmodel = RetailerWaste(width=40, height=40, food_density=0.7, steps_until_expiration=random.randint(20, 40),
                             retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
-                            food_price=random.randint(6, 10), steps_until_restock=1, family_size=5, wealth=20,
+                            food_price=np.random.binomial(10, 0.3, 100), steps_until_restock=1,
+                            family_size=5, wealth=np.random.binomial(10, 0.6, 100),
                             investment_level=5)
 
 
@@ -173,8 +184,8 @@ def run_model():  # defining the run_model class
 fixed_params = dict(height=100, width=100)
 
 variable_params = dict(
-    food_density=np.arange(0, 1, 0.1)[1:],
-    consumer_density=np.arange(0, 1, 0.1)[1:])  # loop over the width of the model in steps, 1 step takes around 4s
+    #food_density=np.arange(0, 1, 0.1)[1:],
+    food_prce = np.random.binomial(np.arange(0, 10, 0.1), 0.5))  # loop over the width of the model in steps, 1 step takes around 4s
 
 model_reporter = {"Food": lambda m: count_type(m, "Food"),
                   "Consumer": lambda m: count_type(m, "Consumer"),
@@ -195,11 +206,11 @@ def run_batch():
 
     model_data_batchrunner = param_run.get_model_vars_dataframe()
     # saves the data to a .pkl
-    with open('model_data.pkl', 'wb') as f:
+    with open('model_data1.pkl', 'wb') as f:
         pickle.dump(model_data_batchrunner, f)
 
 
 # run the batch before the model, otherwise it bugs out.
 if __name__ == "__main__":
-    # run_batch()
+    run_batch()
     run_model()
