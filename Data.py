@@ -1,3 +1,5 @@
+import numpy
+from matplotlib import pyplot
 from numpy import random
 
 import matplotlib.pyplot as plt
@@ -153,6 +155,24 @@ def get_graph8():
     rp.set_ylabel("Frequency", fontsize=15)
     plt.show()
 
+def get_graph9():
+    global df
+    food_price = df.iloc[4]['food_price']
+    counter1 = Counter(food_price[4])
+    mylist1 = [key for key, val in counter1.items() for _ in range(val)]
+    consumer_wealth = df.iloc[4]['consumer_wealth']
+    counter2 = Counter(consumer_wealth[4])
+    mylist2 = [key for key, val in counter2.items() for _ in range(val)]
+
+    sns.set_style("darkgrid")
+
+    rp = sns.histplot(data=mylist1, discrete=True)
+    rp1 = sns.histplot(data=mylist2, discrete=True)
+    rp.set_title("Distribution of food price and consumer wealth", fontsize=15)
+    rp.set_xlabel("Price (dimensionless)", fontsize=15)
+    rp.set_ylabel("Frequency", fontsize=15)
+    plt.show()
 
 #get_graph7()
-get_graph8()
+#get_graph8()
+get_graph9()

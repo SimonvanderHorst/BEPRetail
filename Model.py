@@ -55,7 +55,7 @@ def get_food_price(model):
     return price_list
 
 class RetailerWaste(Model):
-    def __init__(self, width=40, height=40, food_density=0.7, steps_until_expiration=random.randint(20, 40),
+    def __init__(self, width=40, height=40, food_density=0.7, steps_until_expiration=30,
                  retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
                  food_price=np.random.binomial(10, 0.3, 100), steps_until_restock=2,
                  family_size=5, wealth=np.random.binomial(10, 0.6, 100),
@@ -86,8 +86,8 @@ class RetailerWaste(Model):
                                                             "Retailer": lambda m: count_type(m, "Retailer"),
                                                             "step": get_step_number,
                                                             "food_waste": get_food_waste,
-                                                            #"consumer wealth": get_consumer_wealth,
-                                                            #"food price": get_food_price
+                                                            "consumer wealth": get_consumer_wealth,
+                                                            "food price": get_food_price
                                                             },
                                            agent_reporters={"breed": lambda a: a.breed})
 
@@ -96,9 +96,9 @@ class RetailerWaste(Model):
                 # every block in every other row has chance(food_density) of becoming food
                 if (y % 2) == 0 and self.random.random() < self.food_density:
                     new_food = Food((x, y), self, food_density,
-                                    steps_until_expiration=np.random.binomial(steps_until_expiration, 0.8, 1),
+                                    steps_until_expiration=(round(int(np.random.binomial(steps_until_expiration, 0.8, 1)))),
                                     food_price=food_price,
-                                    steps_until_restock=steps_until_restock)  # TODO: define this + why binomial + Paul vragen?
+                                    steps_until_restock=steps_until_restock)  # TODO: define this + hardcoded number + Paul vragen?
                     self.grid.position_agent(new_food, x, y)  # position the agent in the grid
                     self.schedule.add(new_food)  # add agent to the scheduler
 
@@ -145,7 +145,7 @@ class RetailerWaste(Model):
 
 
 # this is where you update the model parameters
-retailmodel = RetailerWaste(width=40, height=40, food_density=0.7, steps_until_expiration=random.randint(20, 40),
+retailmodel = RetailerWaste(width=40, height=40, food_density=0.7, steps_until_expiration=30,
                             retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
                             food_price=np.random.binomial(10, 0.3, 100), steps_until_restock=2,
                             family_size=5, wealth=np.random.binomial(12, 0.8, 100),
@@ -162,7 +162,7 @@ def value(cell):
                 if cell.food_type == "meat":
                     return round(0.5 * cell.steps_until_expiration)  # red
                 if cell.food_type == "vegetable":
-                    return 80 - np.round(0.5 * cell.steps_until_expiration)  # green
+                    return 80 - round(0.5 * cell.steps_until_expiration)  # green
             elif cell.purchased == 1:
                 return 20  # orange
             elif cell.expired == 1:
@@ -230,7 +230,7 @@ agent_reporter = {}
 
 # running the batch
 def run_batch():
-    param_run = BatchRunner(RetailerWaste, variable_parameters=variable_params, iterations=2,
+    param_run = BatchRunner(RetailerWaste, variable_parameters=variable_params, iterations=6,
                             # the number of iterations is 1
                             fixed_parameters=fixed_params, model_reporters=model_reporter,
                             agent_reporters=agent_reporter, max_steps=500)
