@@ -40,12 +40,26 @@ def get_food_waste(model):
     return amount
 
 
+def get_consumer_wealth(model):
+    wealth_list = []
+    for a in model.schedule.agents:
+        if a.breed == "Consumer":
+            wealth_list.append(a.wealth)
+    return wealth_list
+
+def get_food_price(model):
+    price_list = []
+    for a in model.schedule.agents:
+        if a.breed == "Food":
+            price_list.append(a.food_price)
+    return price_list
+
 class RetailerWaste(Model):
     def __init__(self, width=40, height=40, food_density=0.7, steps_until_expiration=random.randint(20, 40),
                  retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
-                 food_price=np.random.binomial(10, 0.3, 100), steps_until_restock=1,
+                 food_price=np.random.binomial(10, 0.3, 100), steps_until_restock=2,
                  family_size=5, wealth=np.random.binomial(10, 0.6, 100),
-                 investment_level=5):
+                 investment_level=0):
         # adjust these variables at retailmodel level, this is the base scenario
 
         self.width = width  # width of the model
@@ -71,7 +85,9 @@ class RetailerWaste(Model):
                                                             "Consumer": lambda m: count_type(m, "Consumer"),
                                                             "Retailer": lambda m: count_type(m, "Retailer"),
                                                             "step": get_step_number,
-                                                            "food_waste": get_food_waste
+                                                            "food_waste": get_food_waste,
+                                                            #"consumer wealth": get_consumer_wealth,
+                                                            #"food price": get_food_price
                                                             },
                                            agent_reporters={"breed": lambda a: a.breed})
 
@@ -80,17 +96,24 @@ class RetailerWaste(Model):
                 # every block in every other row has chance(food_density) of becoming food
                 if (y % 2) == 0 and self.random.random() < self.food_density:
                     new_food = Food((x, y), self, food_density,
-                                    steps_until_expiration=random.randint(10, steps_until_expiration),
+                                    steps_until_expiration=np.random.binomial(steps_until_expiration, 0.8, 1),
                                     food_price=food_price,
-                                    steps_until_restock=steps_until_restock)  # TODO: define this + hardcoded number + Paul vragen?
+                                    steps_until_restock=steps_until_restock)  # TODO: define this + why binomial + Paul vragen?
                     self.grid.position_agent(new_food, x, y)  # position the agent in the grid
                     self.schedule.add(new_food)  # add agent to the scheduler
-                    self.food_price = random.choice(food_price)
+
+                    # when the batchrunner runs, the food_price datastructure changes, this accommodates that change
+                    food_price_list = food_price.tolist()
+                    x = isinstance(food_price_list, (int, float))
+                    if x:
+                        self.food_price = food_price
+                    else:
+                        self.food_price = random.choice(food_price_list)
                     if self.random.random() <= food_type_probability:  # odds of the product being either meat or vegetable
                         new_food.food_type = "meat"
                     else:
                         new_food.food_type = "vegetable"
-                    # the expiry date of a product is extended based on the investment level
+                    # the expiry date of a product is extended based on the investment level todo onderbouwen
                     # the price of a product is increased based on the investment level
                     self.steps_until_expiration = self.steps_until_expiration * (1 + (0.1 * self.investment_level))
                     self.food_price = self.food_price * (1 + (0.1 * self.investment_level))
@@ -103,7 +126,9 @@ class RetailerWaste(Model):
                     self.schedule.add(new_retailer)
                 elif self.random.random() < self.consumer_density:  # Set chance consumers are spawned on the aisle
                     new_consumer = Consumer((x, y), self, family_size, wealth)
-                    self.wealth = random.choice(wealth)
+
+                    wealthlist = wealth.tolist()
+                    self.wealth = random.choice(wealthlist)
                     self.grid.position_agent(new_consumer, x, y)
                     self.schedule.add(new_consumer)
 
@@ -122,9 +147,9 @@ class RetailerWaste(Model):
 # this is where you update the model parameters
 retailmodel = RetailerWaste(width=40, height=40, food_density=0.7, steps_until_expiration=random.randint(20, 40),
                             retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
-                            food_price=np.random.binomial(10, 0.3, 100), steps_until_restock=1,
-                            family_size=5, wealth=np.random.binomial(10, 0.6, 100),
-                            investment_level=5)
+                            food_price=np.random.binomial(10, 0.3, 100), steps_until_restock=2,
+                            family_size=5, wealth=np.random.binomial(12, 0.8, 100),
+                            investment_level=0)
 
 
 # color setup for holoviews
@@ -137,7 +162,7 @@ def value(cell):
                 if cell.food_type == "meat":
                     return round(0.5 * cell.steps_until_expiration)  # red
                 if cell.food_type == "vegetable":
-                    return 80 - round(0.5 * cell.steps_until_expiration)  # green
+                    return 80 - np.round(0.5 * cell.steps_until_expiration)  # green
             elif cell.purchased == 1:
                 return 20  # orange
             elif cell.expired == 1:
@@ -182,31 +207,38 @@ def run_model():  # defining the run_model class
 
 
 fixed_params = dict(height=100, width=100)
-
 variable_params = dict(
-    #food_density=np.arange(0, 1, 0.1)[1:],
-    food_prce = np.random.binomial(np.arange(0, 10, 0.1), 0.5))  # loop over the width of the model in steps, 1 step takes around 4s
+    # food_density=np.arange(0, 1, 0.1)[1:],
+    # consumer_density=np.arange(0,1, 0.1)[1:],
+      steps_until_expiration=np.arange(10, 100, 10)
+    # wealth = np.arange(0, 10, 1)[1:],
+    # food_price=np.arange(0, 7, 1)[1:]
+    # investment_level = np.arange(0,10,1)[1:]
+)  # loop over the width of the model in steps, 1 step takes around 4s
 
 model_reporter = {"Food": lambda m: count_type(m, "Food"),
                   "Consumer": lambda m: count_type(m, "Consumer"),
                   "Retailer": lambda m: count_type(m, "Retailer"),
                   "step": get_step_number,
-                  "food_waste": get_food_waste}
+                  "food_waste": get_food_waste,
+                  "consumer_wealth": get_consumer_wealth,
+                  "food_price": get_food_price
+                  }
 
 agent_reporter = {}
 
 
 # running the batch
 def run_batch():
-    param_run = BatchRunner(RetailerWaste, variable_parameters=variable_params, iterations=1,
+    param_run = BatchRunner(RetailerWaste, variable_parameters=variable_params, iterations=2,
                             # the number of iterations is 1
                             fixed_parameters=fixed_params, model_reporters=model_reporter,
-                            agent_reporters=agent_reporter, max_steps=100)
+                            agent_reporters=agent_reporter, max_steps=500)
     param_run.run_all()
 
     model_data_batchrunner = param_run.get_model_vars_dataframe()
     # saves the data to a .pkl
-    with open('model_data1.pkl', 'wb') as f:
+    with open('model_data.pkl', 'wb') as f:
         pickle.dump(model_data_batchrunner, f)
 
 
