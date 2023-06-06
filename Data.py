@@ -49,15 +49,16 @@ def get_graph1():
 
 with open('model_data_wealth.pkl', 'rb') as f:
     df4 = pickle.load(f)
-df_wealth = df4.groupby('wealth')['food_waste'].mean()
+print(df4)
+df_wealth = df4.groupby('food_price')['food_waste'].mean()
 print(df4.iloc[1]['food_price'])
 print(df_wealth)
 
 def get_graph2():
     sns.set_style("darkgrid")
     rp = sns.lineplot(data=df_wealth)
-    rp.set_title("Relationship between food waste and wealth", fontsize=10)
-    rp.set_xlabel("wealth", fontsize=10)
+    rp.set_title("Relationship between food price and food waste", fontsize=10)
+    rp.set_xlabel("food price", fontsize=10)
     rp.set_ylabel("Food Waste", fontsize=10)
     plt.show()
 

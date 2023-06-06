@@ -38,13 +38,13 @@ class Food(Agent):
 
 
 class Consumer(Agent):
-    def __init__(self, pos, model, family_size, wealth):
+    def __init__(self, pos, model, family_size, price_tolerance):
         super().__init__(pos, model)
         self.breed = "Consumer"
         self.pos = pos
         self.model = model
         self.family_size = family_size
-        self.wealth = wealth
+        self.price_tolerance = price_tolerance
         self.minimum_days_until_expiry = 10 / self.family_size  # lineair? #todo wtf
 
     def step(self):
@@ -56,14 +56,14 @@ class Consumer(Agent):
                 if neighbor.food_type == 'meat':
 
                     if all(self.random.randint(0,
-                                               neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry and self.wealth >= neighbor.food_price):
+                                               neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry and self.price_tolerance >= neighbor.food_price):
                         neighbor.purchased = 1
                         break
                 elif neighbor.food_type == "vegetable":
                     # if a random integer between 0 and the products base expiry date is lower than its current #todo define this assumption
                     # expiry date the consumer will purchase the item
                     if all(self.random.randint(0,
-                                               neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry and self.wealth >= neighbor.food_price):
+                                               neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry and self.price_tolerance >= neighbor.food_price):
                         neighbor.purchased = 1
 
         # consumer agent movement. First, a list of movable locations is made, then a random option out of the list

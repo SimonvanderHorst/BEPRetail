@@ -56,22 +56,32 @@ def get_food_price(model):
     return price_list
 
 
-wealth_list = pd.read_csv('wealth_dist.csv', sep=';')
-wealth_list["probability"] = wealth_list['Households, total'].div(len(wealth_list))
-wealth_list1 = []
-wealth_list1 = wealth_list
-wealth_list1["probability"] = wealth_list["Households, total"].div(sum(wealth_list["Households, total"]))
-print(wealth_list1)
-xk = wealth_list1["Income"]
-pk = wealth_list1["probability"]
-wealth_dist = stats.rv_discrete(name='custm', values=(xk, pk))
-fig, ax = plt.subplots(1, 1)
-ax.plot(xk, wealth_dist.pmf(xk), 'ro', ms=12, mec='r')
-ax.vlines(xk, 0, wealth_dist.pmf(xk), colors='r', lw=4)
-plt.xlabel("wealth in euros x1000")
-plt.ylabel("probability")
-plt.title("Wealth distribution in the Netherlands")
-plt.show()
+def create_wealth_dist():  # https://www.cbs.nl/en-gb/visualisations/income-distribution
+    # this function creates a sample of 100 numbers based on the income distribution in NL
+    wealth_list = pd.read_csv('wealth_dist.csv', sep=';')  # Reads the file
+    wealth_list1 = wealth_list
+    wealth_list1["probability"] = wealth_list["Households, total"].div(
+        sum(wealth_list["Households, total"]))  # calculates the probability of the given income
+    xk = wealth_list1["Income"]
+    pk = wealth_list1["probability"]
+    wealth_dist = stats.rv_discrete(name='wealth_dist', values=(
+        xk, pk))  # defines the distribution with the values and corresponding probability
+    """" Plot of distribution
+    fig, ax = plt.subplots(1, 1) 
+    ax.plot(xk, wealth_dist.pmf(xk), 'ro', ms=12, mec='r')
+    ax.vlines(xk, 0, wealth_dist.pmf(xk), colors='r', lw=4)
+    plt.xlabel("wealth in euros x1000")
+    plt.ylabel("probability")
+    plt.title("Income distribution in the Netherlands")
+    plt.show()
+    """
+    wealthdistrib = []  # creates a list with a 100 number sample of the distribution
+    for i in range(100):
+        wealthdistrib.append(wealth_dist.rvs(1))
+    return wealthdistrib
+
+
+create_wealth_dist()
 
 
 class RetailerWaste(Model):
@@ -80,7 +90,7 @@ class RetailerWaste(Model):
                  # food_price=np.random.binomial(10, 0.3, 100),
                  food_price=np.random.uniform(3, 7, 100),
                  steps_until_restock=1,
-                 family_size=5, price_tolerance=np.random.binomial(10, 0.6, 100),
+                 family_size=5, price_tolerance=create_wealth_dist(),
                  investment_level=0):
         # adjust these variables at retailmodel level, this is the base scenario
 
@@ -149,12 +159,11 @@ class RetailerWaste(Model):
                     new_consumer = Consumer((x, y), self, family_size, price_tolerance)
                     self.grid.position_agent(new_consumer, x, y)
                     self.schedule.add(new_consumer)
-                    wealthlist = price_tolerance.tolist()
-                    x = isinstance(wealthlist, (int, float))
+                    x = isinstance(price_tolerance, (int, float))
                     if x:
                         self.price_tolerance = price_tolerance
                     else:
-                        self.price_tolerance = random.choice(wealthlist)
+                        self.price_tolerance = random.choice(price_tolerance)
 
         self.running = True
 
@@ -172,7 +181,7 @@ class RetailerWaste(Model):
 retailmodel = RetailerWaste(width=50, height=50, food_density=0.7, steps_until_expiration=30,
                             retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
                             food_price=np.random.binomial(10, 0.3, 100), steps_until_restock=2,
-                            family_size=5, price_tolerance=np.random.binomial(10, 0.6, 100),
+                            family_size=5, price_tolerance=create_wealth_dist(),
                             investment_level=0)
 
 
@@ -235,8 +244,8 @@ variable_params = dict(
     # food_density=np.arange(0, 1, 0.1)[1:],
     # consumer_density=np.arange(0,1, 0.1)[1:],
     # steps_until_expiration=np.arange(10, 100, 10)
-    price_tolerance=np.arange(3, 9, 1),
-    # food_price=np.arange(0, 7, 1)[1:],
+    # price_tolerance=np.arange(3, 9, 1),
+    food_price=np.arange(0, 40, 5),
     # investment_level = np.arange(0,10,1)[1:]
 )  # loop over the width of the model in steps, 1 step takes around 4s
 
@@ -246,7 +255,7 @@ model_reporter = {"Food": lambda m: count_type(m, "Food"),
                   "step": get_step_number,
                   "food_waste": get_food_waste,
                   "consumer_wealth": get_consumer_wealth,
-                  "food_price": get_food_price
+                  #"food_price": get_food_price
                   }
 
 agent_reporter = {}
@@ -265,7 +274,8 @@ def run_batch():
     with open('model_data_wealth.pkl', 'wb') as f:
         pickle.dump(model_data_batchrunner, f)
 
+
 # run the batch before the model, otherwise it bugs out.
-# if __name__ == "__main__":
-# run_batch()
-# run_model()
+if __name__ == "__main__":
+    run_batch()
+    run_model()
