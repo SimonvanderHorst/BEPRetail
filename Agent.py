@@ -58,6 +58,7 @@ class Consumer(Agent):
                     if all(self.random.randint(0,
                                                neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry and self.wealth >= neighbor.food_price):
                         neighbor.purchased = 1
+                        break
                 elif neighbor.food_type == "vegetable":
                     # if a random integer between 0 and the products base expiry date is lower than its current #todo define this assumption
                     # expiry date the consumer will purchase the item

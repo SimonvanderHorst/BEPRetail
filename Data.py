@@ -47,18 +47,24 @@ def get_graph1():
     ax.scatter(x, y, z)
     plt.show()
 
+with open('model_data_wealth.pkl', 'rb') as f:
+    df4 = pickle.load(f)
+df_wealth = df4.groupby('wealth')['food_waste'].mean()
+print(df4.iloc[1]['food_price'])
+print(df_wealth)
 
 def get_graph2():
-    rp = sns.lineplot(data=df1)
-    rp.set_title("df1 Relationship between food waste and food price", fontsize=10)
-    rp.set_xlabel("Food price", fontsize=10)
+    sns.set_style("darkgrid")
+    rp = sns.lineplot(data=df_wealth)
+    rp.set_title("Relationship between food waste and wealth", fontsize=10)
+    rp.set_xlabel("wealth", fontsize=10)
     rp.set_ylabel("Food Waste", fontsize=10)
     plt.show()
 
 
 # get_graph()
 # get_graph1()
-# get_graph2()
+get_graph2()
 
 with open('model_data1.pkl', 'rb') as f:
     df2 = pickle.load(f)
@@ -109,7 +115,7 @@ print(df2.to_string())
 """
 
 df3 = df.groupby('steps_until_expiration')['food_waste'].mean()
-print(df3)
+#print(df3)
 
 
 def get_graph6():
@@ -124,11 +130,11 @@ def get_graph6():
 
 get_graph6()
 
-
+## histogram plots
 
 def get_graph7():
-    global df
-    consumer_wealth = df.iloc[5]['consumer_wealth']
+    global df4
+    consumer_wealth = df4.iloc[5]['consumer_wealth']
     counter = Counter(consumer_wealth[4])
     mylist = [key for key, val in counter.items() for _ in range(val)]
 
