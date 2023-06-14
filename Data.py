@@ -1,7 +1,6 @@
-import numpy
+import numpy as np
 from matplotlib import pyplot
 from numpy import random
-
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -14,7 +13,8 @@ with open('model_data.pkl', 'rb') as f:
 
 pd.set_option('display.max_columns', None)
 
-#print(df)
+
+# print(df)
 
 
 def get_graph():
@@ -47,31 +47,33 @@ def get_graph1():
     ax.scatter(x, y, z)
     plt.show()
 
+
 with open('model_data_wealth.pkl', 'rb') as f:
     df4 = pickle.load(f)
-print(df4)
-df_wealth = df4.groupby('food_price')['food_waste'].mean()
-print(df4.iloc[1]['food_price'])
-print(df_wealth)
+df_wealth = df4.groupby('steps_until_expiration')['food_waste'].mean()
+
+
+# print(df4.iloc[1]['food_price'])
 
 def get_graph2():
     sns.set_style("darkgrid")
     rp = sns.lineplot(data=df_wealth)
-    rp.set_title("Relationship between food price and food waste", fontsize=10)
-    rp.set_xlabel("food price", fontsize=10)
+    rp.set_title("Relationship between the number of \n steps until expiration and food waste", fontsize=15)
+    rp.set_xlabel("Number of steps until expiration", fontsize=10)
     rp.set_ylabel("Food Waste", fontsize=10)
     plt.show()
 
 
 # get_graph()
 # get_graph1()
-get_graph2()
+# get_graph2()
 
 with open('model_data1.pkl', 'rb') as f:
     df2 = pickle.load(f)
 
 pd.set_option('display.max_columns', None)
 df3 = df2.groupby('investment_level')['food_waste'].mean()
+
 
 def get_graph4():
     global df3
@@ -116,7 +118,9 @@ print(df2.to_string())
 """
 
 df3 = df.groupby('steps_until_expiration')['food_waste'].mean()
-#print(df3)
+
+
+# print(df3)
 
 
 def get_graph6():
@@ -129,7 +133,7 @@ def get_graph6():
     plt.show()
 
 
-get_graph6()
+# get_graph6()
 
 ## histogram plots
 
@@ -162,6 +166,7 @@ def get_graph8():
     rp.set_ylabel("Frequency", fontsize=15)
     plt.show()
 
+
 def get_graph9():
     global df
     food_price = df.iloc[4]['food_price']
@@ -180,6 +185,103 @@ def get_graph9():
     rp.set_ylabel("Frequency", fontsize=15)
     plt.show()
 
-#get_graph7()
-#get_graph8()
-get_graph9()
+
+# get_graph7()
+# get_graph8()
+# get_graph9()
+
+
+with open('model_data_investment_level.pkl', 'rb') as f:
+    df2 = pickle.load(f)
+
+df3 = df2.groupby('investment_level')['food_waste'].mean()
+
+
+def get_graph10():
+    global df3
+    sns.set_style("darkgrid")
+    rp = sns.lineplot(data=df3)
+    rp.set_title("Relationship between food waste and investment level", fontsize=15)
+    rp.set_xlabel("Investment level", fontsize=10)
+    rp.set_ylabel("Food Waste", fontsize=10)
+    plt.show()
+
+
+# get_graph10()
+
+with open('model_data_food_density.pkl', 'rb') as f:
+    df2 = pickle.load(f)
+
+
+# df3 = df2.groupby('investment_level')['food_price'].mean()
+
+def get_graph10():
+    global df3
+    sns.set_style("darkgrid")
+    rp = sns.lineplot(data=df3)
+    rp.set_title("Relationship between food waste and food density", fontsize=15)
+    rp.set_xlabel("food density", fontsize=10)
+    rp.set_ylabel("Food Waste", fontsize=10)
+    plt.show()
+
+
+# get_graph10()
+
+
+with open('model_data_inputs_consumers.pkl', 'rb') as f:
+    df2 = pickle.load(f)
+
+#print(df2)
+# df3 = df2.groupby('investment_level')['food_waste'].mean()
+df3 = df2['food_price'].loc[0]
+#print(np.average(df3))
+#print(np.std(df3))
+
+
+def get_graph11():
+    global df3
+    sns.set_style("darkgrid")
+    fig, ax = plt.subplots()
+    rp = sns.lineplot(data=df3, ax=ax)
+    rp.set_title("Relationship between investment level\nand model size", fontsize=15)
+    rp.set_xlabel("Investment level", fontsize=10)
+    rp.set_ylabel("Directional length of model in model cells (number)", fontsize=10)
+    ax.set_xlim(0, 9)
+
+    plt.show()
+
+
+#get_graph11()
+
+with open('model_data_inputs_consumers.pkl', 'rb') as f:
+    df2 = pickle.load(f)
+
+# print(df2)
+# df3['Consumer'] = df2.groupby('investment_level')['Consumer'].mean()
+# df3['Food'] = df2.groupby('investment_level')['Food'].mean()
+list1 = ['steps_until_restock', 'steps_until_expiration']
+df3 = df2[['steps_until_restock', 'steps_until_expiration', 'investment_level']]
+# print(df3['steps_until_expiration'].iloc[0])
+df4 = df3['steps_until_expiration'].iloc[0]
+
+
+# print(np.average(df4))
+# print(np.std(df4))
+
+def get_graph12():
+    global df3
+    sns.set_style("darkgrid")
+    fig, ax = plt.subplots()
+    rp = sns.histplot(data=df4)
+    rp.set_title("Frequency of occurrence of initial steps until expiration", fontsize=15)
+    rp.set_xlabel("Initial steps until expiration", fontsize=10)
+    rp.set_ylabel("Frequency", fontsize=10)
+    plt.show()
+
+
+# get_graph12()
+
+with open('model_data_state.pkl', 'rb') as f:
+    df2 = pickle.load(f)
+
+print(df2)

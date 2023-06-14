@@ -1,3 +1,7 @@
 To run the model:
 1. Open Model.py
 2. Run Model.py
+
+all(self.random.randint(0,
+                                               neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry and self.price_tolerance >= neighbor.food_price):
+                        neighbor.purchased = 1

@@ -3,7 +3,7 @@ from mesa import Agent
 
 
 class Food(Agent):
-    def __init__(self, pos, model, probability_range, steps_until_expiration, food_price, steps_until_restock):
+    def __init__(self, pos, model, probability_range, steps_until_expiration, food_price, steps_until_restock, investment_level):
         super().__init__(pos, model)
         self.breed = "Food"
         self.pos = pos
@@ -12,12 +12,17 @@ class Food(Agent):
         self.steps_until_expiration = steps_until_expiration
         self.initial_steps_until_expiration = steps_until_expiration
         self.food_type = 'meat'
-        self.food_price = food_price
+        self.food_price = random.choice(food_price)
         self.purchased = 0
         self.steps_until_restock = steps_until_restock
         self.initial_steps_until_restock = steps_until_restock
+        self.investment_level = investment_level
         self.minimum_day_until_expiry = 5  # todo check what this does again in relationship to the todo below
         self.expired = 0
+        # the expiry date of a product is extended based on the investment level todo onderbouwen
+        # the price of a product is increased based on the investment level
+        #self.steps_until_expiration = self.steps_until_expiration * (1 + (1 * self.investment_level))
+        self.food_price = int(self.food_price * (1 + (1 * self.investment_level)))
 
     def step(self):
 
@@ -44,28 +49,25 @@ class Consumer(Agent):
         self.pos = pos
         self.model = model
         self.family_size = family_size
-        self.price_tolerance = price_tolerance
+        self.price_tolerance = random.choice(price_tolerance)
         self.minimum_days_until_expiry = 10 / self.family_size  # lineair? #todo wtf
 
     def step(self):
 
         self.update_neighbors()  # run update_neighbors
-
         for neighbor in self.neighbors:
             if neighbor.breed == "Food" and neighbor.expired == 0:
+                #print("price tolerance", self.price_tolerance, "food price", neighbor.food_price, "steps to expiry", neighbor.steps_until_expiration)
                 if neighbor.food_type == 'meat':
-
-                    if all(self.random.randint(0,
-                                               neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry and self.price_tolerance >= neighbor.food_price):
+                    if self.price_tolerance >= neighbor.food_price:
                         neighbor.purchased = 1
+                    else:
                         break
                 elif neighbor.food_type == "vegetable":
                     # if a random integer between 0 and the products base expiry date is lower than its current #todo define this assumption
                     # expiry date the consumer will purchase the item
-                    if all(self.random.randint(0,
-                                               neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry and self.price_tolerance >= neighbor.food_price):
+                    if self.price_tolerance >= neighbor.food_price:
                         neighbor.purchased = 1
-
         # consumer agent movement. First, a list of movable locations is made, then a random option out of the list
         # is chosen. Because the swapping of an agent with an agent works differently than an agent moving to an
         # empty cell we will first check if the chosen location is a consumer or an empty cell to then apply the
