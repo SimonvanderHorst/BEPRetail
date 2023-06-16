@@ -5,3 +5,6 @@ To run the model:
 all(self.random.randint(0,
                                                neighbor.minimum_day_until_expiry) <= neighbor.minimum_day_until_expiry and self.price_tolerance >= neighbor.food_price):
                         neighbor.purchased = 1
+
+
+                        np.random.binomial(50, 0.5, 100)

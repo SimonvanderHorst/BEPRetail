@@ -283,7 +283,17 @@ def get_graph12():
 
 with open('model_data_sensitivity.pkl', 'rb') as f:
     df2 = pickle.load(f)
+
 df3 = df2[['get_purchased','get_purchased_food_freshness','food_waste']]
-print(df3[['get_purchased', 'food_waste']].mean())
-print(df3['get_purchased_food_freshness'])
-print(np.average(df3['get_purchased_food_freshness']))
+def get_graph13():
+    global df3
+    sns.set_style("darkgrid")
+    rp = sns.lineplot(data=df3)
+    rp.set_title("KPIs consumer property and retail waste over 100 iterations", fontsize=15)
+    rp.set_xlabel("Iterations", fontsize=10)
+    rp.set_ylabel("KPIs", fontsize=10)
+    plt.show()
+
+
+
+get_graph13()

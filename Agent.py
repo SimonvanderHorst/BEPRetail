@@ -20,11 +20,13 @@ class Food(Agent):
         self.investment_level = investment_level
         self.minimum_day_until_expiry = 5  # todo check what this does again in relationship to the todo below
         self.expired = 0
+        self.expired_count = 0
         self.restocking = 0
+        self.purchased_count = 0
         # the expiry date of a product is extended based on the investment level, 24 steps is a day,
         # cheap TTI increases expiration date by 2 days, expensive TTI increases it by 3
         # the price of a product is increased based on the investment level
-        self.additional_expiration_steps = ((24 * self.investment_level) + 24)
+        self.additional_expiration_steps = int((24 * self.investment_level) + 24)
         self.steps_until_expiration = self.steps_until_expiration + self.additional_expiration_steps
         self.food_price = int(self.food_price * (1 + (1 * self.investment_level)))
 
@@ -46,19 +48,18 @@ class Food(Agent):
         # expiration logic
         if self.steps_until_expiration == -1:
             self.expired = 1
+            self.expired_count += 1
 
         self.steps_until_expiration -= 1
 
 
 class Consumer(Agent):
-    def __init__(self, pos, model, family_size, price_tolerance):
+    def __init__(self, pos, model, price_tolerance):
         super().__init__(pos, model)
         self.breed = "Consumer"
         self.pos = pos
         self.model = model
-        self.family_size = family_size
         self.price_tolerance = random.choice(price_tolerance)
-        self.minimum_days_until_expiry = 10 / self.family_size  # lineair? #todo wtf
 
     def step(self):
 
@@ -69,6 +70,7 @@ class Consumer(Agent):
                 if neighbor.food_type == 'meat':
                     if self.price_tolerance >= neighbor.food_price:
                         neighbor.purchased = 1
+                        neighbor.purchased_count += 1
                     else:
                         break
                 elif neighbor.food_type == "vegetable":
@@ -76,6 +78,8 @@ class Consumer(Agent):
                     # expiry date the consumer will purchase the item
                     if self.price_tolerance >= neighbor.food_price:
                         neighbor.purchased = 1
+                        neighbor.purchased_count += 1
+
         # consumer agent movement. First, a list of movable locations is made, then a random option out of the list
         # is chosen. Because the swapping of an agent with an agent works differently than an agent moving to an
         # empty cell we will first check if the chosen location is a consumer or an empty cell to then apply the
