@@ -3,7 +3,8 @@ from mesa import Agent
 
 
 class Food(Agent):
-    def __init__(self, pos, model, probability_range, steps_until_expiration, food_price, steps_until_restock, investment_level):
+    def __init__(self, pos, model, probability_range, steps_until_expiration, food_price, steps_until_restock,
+                 investment_level):
         super().__init__(pos, model)
         self.breed = "Food"
         self.pos = pos
@@ -19,21 +20,28 @@ class Food(Agent):
         self.investment_level = investment_level
         self.minimum_day_until_expiry = 5  # todo check what this does again in relationship to the todo below
         self.expired = 0
-        # the expiry date of a product is extended based on the investment level todo onderbouwen
+        self.restocking = 0
+        # the expiry date of a product is extended based on the investment level, 24 steps is a day,
+        # cheap TTI increases expiration date by 2 days, expensive TTI increases it by 3
         # the price of a product is increased based on the investment level
-        #self.steps_until_expiration = self.steps_until_expiration * (1 + (1 * self.investment_level))
+        self.additional_expiration_steps = ((24 * self.investment_level) + 24)
+        self.steps_until_expiration = self.steps_until_expiration + self.additional_expiration_steps
         self.food_price = int(self.food_price * (1 + (1 * self.investment_level)))
 
     def step(self):
 
         if self.expired == 1 or self.purchased == 1:  # todo each step until restock it counts as expired
+            self.restocking = 1
+            self.expired = 0
+            self.purchased = 0
+
+        if self.restocking == 1:
             self.steps_until_restock -= 1
             if self.steps_until_restock == 0:
                 # gives the products their initial (stochastic) values #
-                self.expired = 0
-                self.steps_until_expiration = self.initial_steps_until_expiration
+                self.restocking = 0
+                self.steps_until_expiration = self.initial_steps_until_expiration + self.additional_expiration_steps
                 self.steps_until_restock = self.initial_steps_until_restock
-                self.purchased = 0
 
         # expiration logic
         if self.steps_until_expiration == -1:
@@ -57,7 +65,7 @@ class Consumer(Agent):
         self.update_neighbors()  # run update_neighbors
         for neighbor in self.neighbors:
             if neighbor.breed == "Food" and neighbor.expired == 0:
-                #print("price tolerance", self.price_tolerance, "food price", neighbor.food_price, "steps to expiry", neighbor.steps_until_expiration)
+                # print("price tolerance", self.price_tolerance, "food price", neighbor.food_price, "steps to expiry", neighbor.steps_until_expiration)
                 if neighbor.food_type == 'meat':
                     if self.price_tolerance >= neighbor.food_price:
                         neighbor.purchased = 1

@@ -30,7 +30,7 @@ def count_type(model, condition):
 def get_step_number(model):
     return model.schedule.steps
 
-
+#KPI Retail waste
 def get_food_waste(model):
     amount = 0
     for a in model.schedule.agents:
@@ -38,7 +38,7 @@ def get_food_waste(model):
             if a.expired == 1:
                 amount += a.expired
     return amount
-
+#KPI Consumer Property
 def get_purchased(model):
     amount = 0
     for a in model.schedule.agents:
@@ -46,13 +46,13 @@ def get_purchased(model):
             if a.purchased == 1:
                 amount += a.purchased
     return amount
-
+#KPI Purchased food freshness
 def get_purchased_food_freshness(model):
     freshness_list = []
     for a in model.schedule.agents:
         if a.breed == "Food":
             if a.purchased == 1:
-                freshness_list.append(a.steps_until_expiration)
+                freshness_list.append(a.steps_until_expiration / a.initial_steps_until_expiration)
     return freshness_list
 
 def get_consumer_wealth(model):
@@ -115,9 +115,9 @@ create_wealth_dist()
 
 
 class RetailerWaste(Model):
-    def __init__(self, width=40, height=40, food_density=0.7, steps_until_expiration=240,
+    def __init__(self, width=40, height=40, food_density=0.7, steps_until_expiration=10,
                             retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
-                            food_price=np.random.binomial(50, 0.5, 100), steps_until_restock=1,
+                            food_price=np.random.binomial(50, 0.5, 100), steps_until_restock=3,
                             family_size=5, price_tolerance=create_wealth_dist(),
                             investment_level=0):
         # adjust these variables at retailmodel level, this is the base scenario
@@ -204,7 +204,7 @@ class RetailerWaste(Model):
 # this is where you update the model parameters
 retailmodel = RetailerWaste(width=40, height=40, food_density=0.7, steps_until_expiration=240,
                             retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
-                            food_price=np.random.binomial(50, 0.5, 100), steps_until_restock=2,
+                            food_price=np.random.binomial(20, 0.5, 100), steps_until_restock=1,
                             family_size=5, price_tolerance=create_wealth_dist(),
                             investment_level=0)
 
@@ -245,7 +245,7 @@ hmap = hv.HoloMap()
 
 
 def run_model():  # defining the run_model class
-    for i in range(400):  # steps the model takes
+    for i in range(100):  # steps the model takes
         retailmodel.step()
         data = np.array([[value(retailmodel.grid[(x, y)]) for x in range(retailmodel.grid.height)] for y in
                          range(retailmodel.grid.height)])
@@ -270,7 +270,7 @@ variable_params = dict(
     # steps_until_expiration=np.arange(10, 100, 5)
     # price_tolerance=np.arange(10, 100, 10),
     # food_price=np.arange(0, 100, 5),
-    investment_level=np.arange(0, 20, 2)
+    # investment_level=np.arange(0, 20, 2)
 )  # loop over the width of the model in steps, 1 step takes around 4s
 
 model_reporter = {"Food": lambda m: count_type(m, "Food"),
@@ -291,15 +291,16 @@ agent_reporter = {}
 
 # running the batch
 def run_batch():
-    param_run = BatchRunner(RetailerWaste, variable_parameters=variable_params, iterations=5,
-                            # the number of iterations is 1
+    param_run = BatchRunner(RetailerWaste,
+                            #variable_parameters=variable_params,
+                            iterations=10,
                             fixed_parameters=fixed_params, model_reporters=model_reporter,
                             agent_reporters=agent_reporter, max_steps=720)
     param_run.run_all()
 
     model_data_batchrunner = param_run.get_model_vars_dataframe()
     # saves the data to a .pkl
-    with open('model_data_state.pkl', 'wb') as f:
+    with open('model_data_sensitivity.pkl', 'wb') as f:
         pickle.dump(model_data_batchrunner, f)
 
 

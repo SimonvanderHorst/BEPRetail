@@ -281,7 +281,9 @@ def get_graph12():
 
 # get_graph12()
 
-with open('model_data_state.pkl', 'rb') as f:
+with open('model_data_sensitivity.pkl', 'rb') as f:
     df2 = pickle.load(f)
-
-print(df2)
+df3 = df2[['get_purchased','get_purchased_food_freshness','food_waste']]
+print(df3[['get_purchased', 'food_waste']].mean())
+print(df3['get_purchased_food_freshness'])
+print(np.average(df3['get_purchased_food_freshness']))
