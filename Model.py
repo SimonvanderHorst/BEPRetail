@@ -124,9 +124,9 @@ create_wealth_dist()
 class RetailerWaste(Model):
     def __init__(self, width=40, height=40, food_density=0.7, steps_until_expiration=240,
                  retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
-                 food_price= np.random.binomial(15, 1, 100), steps_until_restock=1,
+                 food_price= np.random.uniform(20, 21, 100), steps_until_restock=1,
                  price_tolerance=create_wealth_dist(),
-                 investment_level=1.1):
+                 investment_level=0):
         # adjust these variables at retailmodel level, this is the base scenario
 
         self.width = width  # width of the model
@@ -208,11 +208,11 @@ class RetailerWaste(Model):
 
 
 # this is where you update the model parameters
-retailmodel = RetailerWaste(width=40, height=40, food_density=0.1, steps_until_expiration=240,
+retailmodel = RetailerWaste(width=40, height=40, food_density=0.7, steps_until_expiration=240,
                             retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
-                            food_price=np.random.binomial(15, 1, 100), steps_until_restock=1,
+                            food_price=np.random.uniform(20, 21, 100), steps_until_restock=1,
                             price_tolerance=create_wealth_dist(),
-                            investment_level=1.1)
+                            investment_level=0)
 
 
 # color setup for holoviews
@@ -299,18 +299,18 @@ agent_reporter = {}
 def run_batch():
     param_run = BatchRunner(RetailerWaste,
                             #variable_parameters=variable_params,
-                            iterations=100,
+                            iterations=25,
                             fixed_parameters=fixed_params, model_reporters=model_reporter,
-                            agent_reporters=agent_reporter, max_steps=720)
+                            agent_reporters=agent_reporter, max_steps=720) #720
     param_run.run_all()
 
     model_data_batchrunner = param_run.get_model_vars_dataframe()
     # saves the data to a .pkl
-    with open('model_data_results.pkl', 'wb') as f:
+    with open('model_data_results1.pkl', 'wb') as f:
         pickle.dump(model_data_batchrunner, f)
 
 
 # run the batch before the model, otherwise it bugs out. can't run both sequentially.
 if __name__ == "__main__":
     run_batch()
-    # run_model()
+    #run_model()

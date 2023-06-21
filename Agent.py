@@ -71,6 +71,7 @@ class Consumer(Agent):
                     if self.price_tolerance >= neighbor.food_price:
                         neighbor.purchased = 1
                         neighbor.purchased_count += 1
+                        break
                     else:
                         break
                 elif neighbor.food_type == "vegetable":
@@ -79,6 +80,7 @@ class Consumer(Agent):
                     if self.price_tolerance >= neighbor.food_price:
                         neighbor.purchased = 1
                         neighbor.purchased_count += 1
+                        break
 
         # consumer agent movement. First, a list of movable locations is made, then a random option out of the list
         # is chosen. Because the swapping of an agent with an agent works differently than an agent moving to an

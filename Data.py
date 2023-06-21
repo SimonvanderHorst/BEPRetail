@@ -281,10 +281,10 @@ def get_graph12():
 
 # get_graph12()
 
-with open('model_data_sensitivity.pkl', 'rb') as f:
+with open('model_data_results1.pkl', 'rb') as f:
     df2 = pickle.load(f)
-
 df3 = df2[['get_purchased','get_purchased_food_freshness','food_waste']]
+print(df3)
 def get_graph13():
     global df3
     sns.set_style("darkgrid")
