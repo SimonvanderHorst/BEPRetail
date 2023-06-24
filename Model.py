@@ -58,7 +58,8 @@ def get_purchased_food_freshness(model):
             if a.purchased == 1:
                 freshness_list.append(
                     a.steps_until_expiration / (a.initial_steps_until_expiration + a.additional_expiration_steps))
-    return freshness_list
+    if len(freshness_list):
+        return sum(freshness_list) / len(freshness_list)
 
 
 def get_consumer_wealth(model):
@@ -122,11 +123,11 @@ create_wealth_dist()
 
 
 class RetailerWaste(Model):
-    def __init__(self, width=40, height=40, food_density=0.7, steps_until_expiration=240,
+    def __init__(self, width=40, height=40, food_density=0.7, steps_until_expiration=280,
                  retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
                  food_price= np.random.uniform(20, 21, 100), steps_until_restock=1,
                  price_tolerance=create_wealth_dist(),
-                 investment_level=0):
+                 investment_level=2):
         # adjust these variables at retailmodel level, this is the base scenario
 
         self.width = width  # width of the model
@@ -208,11 +209,11 @@ class RetailerWaste(Model):
 
 
 # this is where you update the model parameters
-retailmodel = RetailerWaste(width=40, height=40, food_density=0.7, steps_until_expiration=240,
+retailmodel = RetailerWaste(width=40, height=40, food_density=0.7, steps_until_expiration=280,
                             retailer_density=0.1, consumer_density=0.1, food_type_probability=0.5,
                             food_price=np.random.uniform(20, 21, 100), steps_until_restock=1,
                             price_tolerance=create_wealth_dist(),
-                            investment_level=0)
+                            investment_level=2)
 
 
 # color setup for holoviews
@@ -273,10 +274,10 @@ fixed_params = dict(height=40, width=40)
 variable_params = dict(
     # food_density=np.arange(0, 1, 0.1)[1:],
     # consumer_density=np.arange(0,1, 0.1)[1:],
-    # steps_until_expiration=np.arange(10, 100, 5)
+    #steps_until_expiration=np.arange(200, 281, 80),
     # price_tolerance=np.arange(10, 100, 10),
     # food_price = np.arange(0, 100, 10),
-    # investment_level=np.arange(0, 20, 2)
+    #investment_level=np.arange(1, 3, 1)
 )  # loop over the width of the model in steps, 1 step takes around 4s
 
 model_reporter = {"Food": lambda m: count_type(m, "Food"),
@@ -299,14 +300,14 @@ agent_reporter = {}
 def run_batch():
     param_run = BatchRunner(RetailerWaste,
                             #variable_parameters=variable_params,
-                            iterations=25,
+                            iterations=100,
                             fixed_parameters=fixed_params, model_reporters=model_reporter,
                             agent_reporters=agent_reporter, max_steps=720) #720
     param_run.run_all()
 
     model_data_batchrunner = param_run.get_model_vars_dataframe()
     # saves the data to a .pkl
-    with open('model_data_results1.pkl', 'wb') as f:
+    with open('model_data_results_exp5.pkl', 'wb') as f:
         pickle.dump(model_data_batchrunner, f)
 
 

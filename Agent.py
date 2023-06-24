@@ -28,7 +28,7 @@ class Food(Agent):
         # the price of a product is increased based on the investment level
         self.additional_expiration_steps = int((24 * self.investment_level) + 24)
         self.steps_until_expiration = self.steps_until_expiration + self.additional_expiration_steps
-        self.food_price = int(self.food_price * (1 + (1 * self.investment_level)))
+        self.food_price = int(self.food_price + (5 * (1 * self.investment_level)))
 
     def step(self):
 

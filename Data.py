@@ -231,11 +231,13 @@ def get_graph10():
 with open('model_data_inputs_consumers.pkl', 'rb') as f:
     df2 = pickle.load(f)
 
-#print(df2)
+# print(df2)
 # df3 = df2.groupby('investment_level')['food_waste'].mean()
 df3 = df2['food_price'].loc[0]
-#print(np.average(df3))
-#print(np.std(df3))
+
+
+# print(np.average(df3))
+# print(np.std(df3))
 
 
 def get_graph11():
@@ -251,7 +253,7 @@ def get_graph11():
     plt.show()
 
 
-#get_graph11()
+# get_graph11()
 
 with open('model_data_inputs_consumers.pkl', 'rb') as f:
     df2 = pickle.load(f)
@@ -283,8 +285,10 @@ def get_graph12():
 
 with open('model_data_results1.pkl', 'rb') as f:
     df2 = pickle.load(f)
-df3 = df2[['get_purchased','get_purchased_food_freshness','food_waste']]
-print(df3)
+df3 = df2[['get_purchased', 'get_purchased_food_freshness', 'food_waste']]
+
+
+# print(df3)
 def get_graph13():
     global df3
     sns.set_style("darkgrid")
@@ -295,5 +299,106 @@ def get_graph13():
     plt.show()
 
 
+#get_graph13()
+list1 = ['get_purchased', 'get_purchased_food_freshness', 'food_waste', 'investment_level']
+# print(df2)
+df4 = df2[list1]
+# print(df4)
+df_invest1 = df4[df4['investment_level'] == 1]
+df_invest2 = df4[df4['investment_level'] == 2]
 
-get_graph13()
+
+# df4 = df2.groupby('investment_level')[].mean()
+
+
+def get_graph14():
+    global df4
+    sns.set_style("darkgrid")
+    rp = sns.lineplot(data=df_invest1)
+    rp.set_title("KPIs consumer property and retail waste over 100 iterations", fontsize=15)
+    rp.set_xlabel("Iterations", fontsize=10)
+    rp.set_ylabel("KPIs", fontsize=10)
+    plt.show()
+
+
+# get_graph14()
+
+
+with open('model_data_results_exp2.pkl', 'rb') as f:
+    df2 = pickle.load(f)
+df_exp2 = df2[['get_purchased', 'get_purchased_food_freshness', 'food_waste']]
+print(df_exp2)
+
+with open('model_data_results_exp3.pkl', 'rb') as f:
+    df4 = pickle.load(f)
+df_exp3 = df4[['get_purchased', 'get_purchased_food_freshness', 'food_waste']]
+print(df_exp3)
+
+with open('model_data_results_exp4.pkl', 'rb') as f:
+    df4 = pickle.load(f)
+df_exp4 = df4[['get_purchased', 'get_purchased_food_freshness', 'food_waste']]
+print(df_exp4)
+
+with open('model_data_results_exp5.pkl', 'rb') as f:
+    df4 = pickle.load(f)
+df_exp5 = df4[['get_purchased', 'get_purchased_food_freshness', 'food_waste']]
+print(df_exp5)
+
+
+
+df = pd.concat([df_exp2,df_exp3,df_exp4, df_exp5])
+
+
+def get_graph15():
+    global df_exp2
+    sns.set_style("darkgrid")
+    fig, ax = plt.subplots()
+    rp2 = sns.lineplot(data=df_exp2, x =df_exp2.index, y='get_purchased', ax=ax)
+    rp3 = sns.lineplot(data=df_exp3, x =df_exp3.index, y='get_purchased', ax=ax)
+    rp4 = sns.lineplot(data=df_exp4, x =df_exp4.index, y='get_purchased', ax=ax)
+    rp4 = sns.lineplot(data=df_exp5, x =df_exp4.index, y='get_purchased', ax=ax)
+
+    rp2.set_title("KPI consumer property over 100 iterations", fontsize=15)
+    rp2.set_xlabel("Iterations", fontsize=10)
+    rp2.set_ylabel("KPIs", fontsize=10)
+    ax.set_xlim(0, 100)
+    plt.show()
+
+
+#get_graph15()
+
+def get_graph16():
+    global df3
+    sns.set_style("darkgrid")
+    fig, ax = plt.subplots()
+    rp = sns.lineplot(data=df_exp2, x =df_exp2.index, y='get_purchased_food_freshness')
+    rp2 = sns.lineplot(data=df_exp3, x =df_exp2.index, y='get_purchased_food_freshness')
+    rp3 = sns.lineplot(data=df_exp4, x =df_exp2.index, y='get_purchased_food_freshness')
+    rp4 = sns.lineplot(data=df_exp5, x =df_exp2.index, y='get_purchased_food_freshness')
+
+    rp.set_title("KPI purchased food freshness", fontsize=15)
+    rp.set_xlabel("Iterations", fontsize=10)
+    rp.set_ylabel("KPIs", fontsize=10)
+    ax.set_xlim(0, 100)
+    plt.show()
+
+
+get_graph16()
+
+def get_graph17():
+    global df3
+    sns.set_style("darkgrid")
+    fig, ax = plt.subplots()
+    rp = sns.lineplot(data=df_exp2, x =df_exp2.index, y='food_waste')
+    rp = sns.lineplot(data=df_exp3, x =df_exp2.index, y='food_waste')
+    rp = sns.lineplot(data=df_exp4, x =df_exp2.index, y='food_waste')
+    rp = sns.lineplot(data=df_exp5, x =df_exp2.index, y='food_waste')
+
+    rp.set_title("KPI food waste over 100 iterations", fontsize=15)
+    rp.set_xlabel("Iterations", fontsize=10)
+    rp.set_ylabel("KPIs", fontsize=10)
+    ax.set_xlim(0, 100)
+    plt.show()
+
+
+get_graph17()
